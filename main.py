@@ -4,42 +4,100 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 
-def media(array):
-    return sum(array) / len(array)
+class Dados(list):
+    def tamanho(self):
+        return len(self)
 
+    def media(self):
+        return sum(self) / len(self)
 
-def mediana(array):
-    half = len(array) // 2
-    return sorted(array)[half]
+    def mediana(self):
+        half = len(self) // 2
+        return sorted(self)[half]
 
+    def moda(self):
+        counter = defaultdict(lambda: 0)
+        # talvez precise quebrar em grupinhos
+        for i in self:
+            counter[i] += 1
+        repetitions = lambda x: counter[x]
+        return max(self, key=repetitions)
 
-def moda(array):
-    counter = defaultdict(lambda: 0)
+    def variancia(self):
+        media_ = self.media()
+        sum_ = 0
+        for i in self:
+            sum_ += (i - media_) ** 2
+        return sum_ / len(self)
 
-    # talvez precise quebrar em grupinhos
-    for i in array:
-        counter[i] += 1
+    def desvio_padrao(self):
+        return np.sqrt(self.variancia())
 
-    repetitions = lambda x: counter[x]
-    return max(array, key=repetitions)
+    def erro_padrao(self):
+        return self.desvio_padrao() / np.sqrt(len(self))
 
+    def coeficiente_variacao(self):
+        return self.desvio_padrao() / self.media() * 100
 
-def variancia(array):
-    media_ = media(array)
-    sum_ = 0
-    size_ = len(array)
+    def quartis_1(self):
+        half = len(self) // 2
+        array = sorted(self)[:half]
+        return Dados(array).mediana()
 
-    for i in array:
-        sum_ += (i - media_) ** 2
+    def quartis_3(self):
+        half = len(self) // 2
+        array = sorted(self)[half:]
+        return Dados(array).mediana()
 
-    return sum_ / size_
+    def assimetria(self):
+        a = self.quartis_3() + self.quartis_1() - 2 * self.mediana()
+        b = self.quartis_3() - self.quartis_1()
+        return a / b
 
+    def curtose(self):
+        return 0.0
 
-def plot_histogram(array, classes=None):
-    if classes is None:
-        classes = int(np.sqrt(len(array)))
-    plt.hist(array, bins=classes)
-    plt.show()
+    def box_info(self):
+        q1 = self.quartis_1()
+        q3 = self.quartis_3()
+
+        iqr = q3 - q1
+        minimum = q1 - iqr * 1.5
+        maximum = q3 + iqr * 1.5
+
+        ok = set()
+        outliers = set()
+        for i in self:
+            if minimum < i < maximum:
+                ok.add(i)
+            else:
+                outliers.add(i)
+
+        minimum = min(ok)
+        maximum = max(ok)
+        return minimum, maximum, outliers
+
+    def __str__(self):
+        minimum, maximum, outliers = self.box_info()
+
+        string = ""
+        string += "Média:   {:.4} \n".format(self.media())
+        string += "Mediana: {:.4} \n".format(self.mediana())
+        string += "Moda:    {:.4} \n".format(self.moda())
+        string += "Assimetria:  {:.4} \n".format(self.assimetria())
+        string += "Curtose:     {:.4} \n".format(self.curtose())
+        string += "Variância:       {:.4} \n".format(self.variancia())
+        string += "Desvio padrão:   {:.4} \n".format(self.desvio_padrao())
+        string += "Erro padrão:     {:.4} \n".format(self.erro_padrao())
+        string += "Coeficiente de variação: {:.4} \n".format(
+            self.coeficiente_variacao()
+        )
+        string += "Qi: {:.4} \n".format(self.quartis_1())
+        string += "Qs: {:.4} \n".format(self.quartis_3())
+        string += "Mínimo: {:.4} \n".format(minimum)
+        string += "Máximo: {:.4} \n".format(maximum)
+        string += "Outliers: {} \n".format(outliers)
+        return string
 
 
 def extrair_dados():
@@ -59,7 +117,7 @@ def extrair_dados():
         if (preco > 0) and (marca == "HEINEKEN")
     ]
 
-    return spaten, heineken
+    return Dados(spaten), Dados(heineken)
 
 
 def histograma_cervejas(spaten, heineken):
@@ -90,84 +148,14 @@ def boxplot_cervejas(spaten, heineken):
     plt.show()
 
 
-def valor_central(array):
-    string = ""
-    string += "Média:   {:.4} \n".format(media(array))
-    string += "Mediana: {:.4} \n".format(mediana(array))
-    string += "Moda:    {:.4}".format(moda(array))
-    return string
-
-
-def dispersao(array):
-    var = variancia(array)
-    desvio = np.sqrt(var)
-    erro = desvio / np.sqrt(len(array))
-    media_ = media(array)
-    coeficiente = desvio / media_ * 100
-
-    string = ""
-    string += "Variância:       {:.4} \n".format(var)
-    string += "Desvio padrão:   {:.4} \n".format(desvio)
-    string += "Erro padrão:     {:.4} \n".format(erro)
-    string += "Coeficiente de variação: {:.4}".format(coeficiente)
-    return string
-
-
-def forma(array):
-    string = ""
-    string += "Assimetria:  {:.4} \n".format(0.0)
-    string += "Curtose:     {:.4}".format(0.0)
-    return string
-
-
-def boxplot_dados(array):
-    half = len(array) // 2
-    array = sorted(array)
-
-    q1 = mediana(array[:half])
-    q2 = mediana(array)
-    q3 = mediana(array[half:])
-
-    iqr = q3 - q1
-    minimum = q1 - iqr * 1.5
-    maximum = q3 + iqr * 1.5
-
-    ok = set()
-    outliers = set()
-    for i in array:
-        if minimum < i < maximum:
-            ok.add(i)
-        else:
-            outliers.add(i)
-
-    minimum = min(ok)
-    maximum = max(ok)
-
-    string = "Min: {:.4} \n".format(minimum)
-    string += "Q1: {:.4} \n".format(q1)
-    string += "Q2: {:.4} \n".format(q2)
-    string += "Q3: {:.4} \n".format(q3)
-    string += "Max: {:.4} \n".format(maximum)
-    string += "Outliers: {}".format(outliers)
-    return string
-
-
 def main():
     spaten, heineken = extrair_dados()
 
     print("# ESTATÍSTICAS SPATEN:")
-    print(valor_central(spaten))
-    print(dispersao(spaten))
-    print(forma(spaten))
-    print(boxplot_dados(spaten))
-    print()
+    print(spaten)
 
     print("# ESTATÍSTICAS HEINEKEN:")
-    print(valor_central(heineken))
-    print(dispersao(heineken))
-    print(forma(heineken))
-    print(boxplot_dados(heineken))
-    print()
+    print(heineken)
 
     histograma_cervejas(spaten, heineken)
     boxplot_cervejas(spaten, heineken)
