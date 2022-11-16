@@ -65,20 +65,26 @@ class Dados(list):
         minimum = q1 - iqr * 1.5
         maximum = q3 + iqr * 1.5
 
+        extreme_max = q1 - iqr * 3
+        extreme_min = q3 + iqr * 3
+
         ok = set()
         outliers = set()
+        extreme = set()
         for i in self:
             if minimum < i < maximum:
                 ok.add(i)
-            else:
+            elif extreme_min < i < extreme_max:
                 outliers.add(i)
+            else:
+                extreme.add(i)
 
         minimum = min(ok)
         maximum = max(ok)
-        return minimum, maximum, outliers
+        return minimum, maximum, outliers, extreme
 
     def __str__(self):
-        minimum, maximum, outliers = self.box_info()
+        minimum, maximum, outliers, extreme = self.box_info()
 
         string = ""
         string += "Média:   {:.4} \n".format(self.media())
@@ -97,6 +103,7 @@ class Dados(list):
         string += "Mínimo: {:.4} \n".format(minimum)
         string += "Máximo: {:.4} \n".format(maximum)
         string += "Outliers: {} \n".format(outliers)
+        string += "Outliers Extremos: {} \n".format(extreme)
         return string
 
 
