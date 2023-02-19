@@ -88,7 +88,7 @@ class Dados(list):
         minimum, maximum, outliers, extreme = self.box_info()
 
         string = ""
-        string += "Tamanho {} \n".format(self.tamanho())
+        string += "Tamanho da amostra {} \n".format(len(self))
         string += "Média:   {:.4} \n".format(self.media())
         string += "Mediana: {:.4} \n".format(self.mediana())
         string += "Moda:    {:.4} \n".format(self.moda())
